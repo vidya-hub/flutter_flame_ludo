@@ -21,8 +21,9 @@ class TileComponent extends RectangleComponent with TapCallbacks {
             paint: tilePaint ?? red,
             children: [
               TextComponent(
-                  text: textToShow,
-                  anchor: Anchor.center,
-                  position: Vector2.all(canvasSize / 2))
+                text: textToShow,
+                anchor: Anchor.center,
+                position: Vector2.all(canvasSize / 2),
+              )
             ]);
 }

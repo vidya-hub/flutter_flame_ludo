@@ -44,26 +44,44 @@ class BoardSquare extends RectangleComponent with TapCallbacks {
       boardTiles.add(TileComponent(
           canvasPosition: movingTilePosition,
           canvasSize: tileSize,
-          textToShow: (i).toString(),
+          textToShow: "${i % 15}",
           tilePaint: BasicPalette.red.paint()));
     }
+    List<List<TileComponent>> gridTileList = List.generate(15, (index) {
+      return boardTiles.sublist(index * 15, (index * 15 + 15));
+    });
+    List<List<Vector2>> gridTileCorrList = List.generate(15, (index) {
+      return rowData.sublist(index * 15, (index * 15 + 15));
+    });
     // 4 regions call A.B,C,D
     // build Player Initial Positions
     List<Player> players = PlayerMethods.getPlayers;
     Vector2 boardCenter = (rowData[0] + rowData[224]) / 2;
-    List<TileComponent> playerPlacingPositions = players.map((player) {
-      return TileComponent(
-        canvasPosition: (rowData[player.playerBirthPlace.first] +
-                rowData[player.playerBirthPlace.last]) /
-            2,
-        canvasSize: tileSize * 6,
-        textToShow: player.player.name,
-        tilePaint: player.color,
-      );
+    // outer positions
+    List<List<TileComponent>> playerPlacingPositions = players.map((player) {
+      Vector2 start = gridTileCorrList[player.playerBirthPlace.first.first]
+          [player.playerBirthPlace.first.last];
+      Vector2 end = gridTileCorrList[player.playerBirthPlace.last.first]
+          [player.playerBirthPlace.last.last];
+      return [
+        TileComponent(
+          canvasPosition: (start + end) / 2,
+          canvasSize: tileSize * 6,
+          textToShow: player.player.name,
+          tilePaint: player.color,
+        ),
+        TileComponent(
+          canvasPosition: (start + end) / 2,
+          canvasSize: tileSize * 4,
+          textToShow: player.player.name,
+          tilePaint: BasicPalette.lightPink.paint(),
+        )
+      ];
     }).toList();
 
     addAll(boardTiles);
-    addAll(playerPlacingPositions);
+    addAll(playerPlacingPositions.map((e) => e.first));
+    addAll(playerPlacingPositions.map((e) => e.last));
     // A endPosition
     List<Vector2> playerPlaceEndingVertices =
         GameModel.centerRectangleVerticesPositions.map(
@@ -84,22 +102,31 @@ class BoardSquare extends RectangleComponent with TapCallbacks {
         )
         .toList();
     addAll(playerEndings);
+    // TODO: build final tracks
 
-    // add(TriangleComponent(triangleVertices: [
-    //   playerPlaceEndingVertices.first,
-    //   boardCenter,
-    //   playerPlaceEndingVertices[2]
-    // ], tilePaint: BasicPalette.black.paint()));
-    //
-    // add(TileComponent(
-    //   canvasPosition: gridCoordinates[10].first,
-    //   canvasSize: tileSize,
-    //   textToShow: player.player.name,
-    //   tilePaint: player.color,
-    // ));
-    // for (List<Vector2> xPath in gridCoordinates) {
-
-    // }
+    List<TileComponent> playerFirstSteps = players.map((player) {
+      return TileComponent(
+        canvasPosition: gridTileCorrList[player.playerFirstStep.first]
+            [player.playerFirstStep.last],
+        canvasSize: tileSize,
+        tilePaint: player.color,
+      );
+    }).toList();
+    addAll(playerFirstSteps);
+    List<List<TileComponent>> finalTrackBuild = players.map((player) {
+      List<List<int>> playerFinalTrack = player.playerFinalTrack;
+      return playerFinalTrack.map((finalCorr) {
+        Vector2 start = gridTileCorrList[finalCorr.first][finalCorr.last];
+        return TileComponent(
+          canvasPosition: (start),
+          canvasSize: tileSize,
+          tilePaint: player.color,
+        );
+      }).toList();
+    }).toList();
+    for (var track in finalTrackBuild) {
+      addAll(track);
+    }
     return super.onLoad();
   }
 }

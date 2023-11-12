@@ -9,6 +9,7 @@ class TileComponent extends RectangleComponent with TapCallbacks {
   double canvasSize;
   Paint? tilePaint;
   String? textToShow;
+
   TileComponent(
       {required this.canvasSize,
       required this.canvasPosition,

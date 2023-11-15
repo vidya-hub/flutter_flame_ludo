@@ -1,31 +1,40 @@
 import 'dart:async';
 
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/palette.dart';
+import 'package:ludoflame/components/piece_components.dart';
 import 'package:ludoflame/components/polygon_component.dart';
 import 'package:ludoflame/components/tile_component.dart';
 import 'package:ludoflame/model/game_model.dart';
 import 'package:ludoflame/model/player_model.dart';
+import 'package:ludoflame/providers/game_provider.dart';
 import 'package:ludoflame/utils/player_methods.dart';
+import 'package:ludoflame/utils/players_enum.dart';
 
-class BoardSquare extends RectangleComponent with TapCallbacks {
+class BoardSquare extends RectangleComponent {
+  final GameProvider gameProvider;
+
   final Vector2 boardPosition;
   double canvasSize;
   BoardSquare({
     required this.boardPosition,
     required this.canvasSize,
+    required this.gameProvider,
   }) : super(
           position: boardPosition,
           size: Vector2.all(canvasSize),
           anchor: Anchor.center,
         );
-
+  List<Vector2> rowData = [];
+  List<TileComponent> boardTiles = [];
+  List<List<Vector2>> gridTileCorrList = [];
+  List<Player> players = [];
+  bool setUpDone = false;
+  String? selectedPiece;
+  List<List<PieceComponent>> playerPieceComponents = [];
   @override
   FutureOr<void> onLoad() {
-    List<Vector2> rowData = [];
-    List<TileComponent> boardTiles = [];
     double tileSize = (canvasSize / 15);
     Vector2 movingTilePosition = Vector2(-tileSize / 2, -tileSize / 2);
     for (var i = 0; i < 225; i++) {
@@ -42,20 +51,34 @@ class BoardSquare extends RectangleComponent with TapCallbacks {
       }
       rowData.add(movingTilePosition);
       boardTiles.add(TileComponent(
-          canvasPosition: movingTilePosition,
-          canvasSize: tileSize,
-          textToShow: "${i % 15}",
-          tilePaint: BasicPalette.red.paint()));
+        canvasPosition: movingTilePosition,
+        canvasSize: tileSize,
+        textToShow: "${i % 15}",
+        tilePaint: BasicPalette.red.paint(),
+        onTap: (tileTap) {
+          if (selectedPiece != null && setUpDone) {
+            String playerName = selectedPiece!.split("-").first;
+            int selectedPlayerPieceIndex =
+                int.parse(selectedPiece!.split("-").last);
+            int indexOfPlayer = playerNameIndex(playerName);
+            PieceComponent component =
+                playerPieceComponents[indexOfPlayer][selectedPlayerPieceIndex];
+            component.position = rowData[i];
+            print(component.position);
+          }
+        },
+      ));
     }
-    List<List<TileComponent>> gridTileList = List.generate(15, (index) {
-      return boardTiles.sublist(index * 15, (index * 15 + 15));
-    });
-    List<List<Vector2>> gridTileCorrList = List.generate(15, (index) {
+    gridTileCorrList = List.generate(15, (index) {
       return rowData.sublist(index * 15, (index * 15 + 15));
     });
+    print("Called");
     // 4 regions call A.B,C,D
     // build Player Initial Positions
-    List<Player> players = PlayerMethods.getPlayers;
+    players = PlayerMethods.getPlayers(
+      gridCorrList: gridTileCorrList,
+      tileSize: tileSize,
+    );
     Vector2 boardCenter = (rowData[0] + rowData[224]) / 2;
     // outer positions
     List<List<TileComponent>> playerPlacingPositions = players.map((player) {
@@ -75,13 +98,30 @@ class BoardSquare extends RectangleComponent with TapCallbacks {
           canvasSize: tileSize * 4,
           textToShow: player.player.name,
           tilePaint: BasicPalette.lightPink.paint(),
-        )
+        ),
       ];
     }).toList();
 
     addAll(boardTiles);
     addAll(playerPlacingPositions.map((e) => e.first));
     addAll(playerPlacingPositions.map((e) => e.last));
+    for (var player in players) {
+      List<PieceComponent> pieceComponents = player.playerPieces.indexed
+          .map(
+            (piece) => PieceComponent(
+              pieceRadius: tileSize * 0.4,
+              canvasPosition: piece.$2.currentPosition,
+              tilePaint: player.color,
+              textToShow: "${player.player.name}-${piece.$1}",
+              onTap: (p0) {
+                selectedPiece = "${player.player.name}-${piece.$1}";
+              },
+            ),
+          )
+          .toList();
+      addAll(pieceComponents);
+      playerPieceComponents.add(pieceComponents);
+    }
     // A endPosition
     List<Vector2> playerPlaceEndingVertices =
         GameModel.centerRectangleVerticesPositions.map(
@@ -127,6 +167,8 @@ class BoardSquare extends RectangleComponent with TapCallbacks {
     for (var track in finalTrackBuild) {
       addAll(track);
     }
+    setUpDone = true;
+
     return super.onLoad();
   }
 }

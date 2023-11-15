@@ -3,33 +3,32 @@ import 'package:flame/events.dart';
 import 'package:flame/palette.dart';
 import 'package:flutter/material.dart';
 
-class TileComponent extends RectangleComponent with TapCallbacks {
+class PieceComponent extends CircleComponent with TapCallbacks {
   static final Paint red = BasicPalette.red.paint();
   Vector2 canvasPosition;
-  double canvasSize;
+  double pieceRadius;
   Paint? tilePaint;
   String? textToShow;
   Function(TapDownEvent)? onTap;
 
-  TileComponent({
-    required this.canvasSize,
+  PieceComponent({
+    required this.pieceRadius,
     required this.canvasPosition,
     this.tilePaint,
     this.textToShow,
     this.onTap,
   }) : super(
-          position: canvasPosition,
-          size: Vector2.all(canvasSize),
-          anchor: Anchor.center,
-          paint: tilePaint ?? red,
-          children: [
-            TextComponent(
-              text: textToShow,
-              anchor: Anchor.center,
-              position: Vector2.all(canvasSize / 2),
-            )
-          ],
-        );
+            position: canvasPosition,
+            radius: pieceRadius,
+            anchor: Anchor.center,
+            paint: tilePaint ?? red,
+            children: [
+              TextComponent(
+                text: textToShow,
+                size: Vector2.all(0.7),
+                scale: Vector2.all(0.7),
+              )
+            ]);
   @override
   void onTapDown(TapDownEvent event) {
     if (onTap != null) {

@@ -1,7 +1,9 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'package:flame/components.dart';
+
 class Piece {
-  List<int> currentPosition;
+  Vector2 currentPosition;
   List<int> initialStep;
   List<int> birthPoint;
   String pieceName;
@@ -13,7 +15,7 @@ class Piece {
   });
 
   Piece copyWith({
-    List<int>? currentPosition,
+    Vector2? currentPosition,
     List<int>? initialStep,
     List<int>? birthPoint,
     String? pieceName,

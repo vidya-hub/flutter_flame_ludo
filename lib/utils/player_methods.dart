@@ -1,3 +1,4 @@
+import 'package:flame/extensions.dart';
 import 'package:flame/palette.dart';
 import 'package:ludoflame/model/piece_model.dart';
 import 'package:ludoflame/model/player_model.dart';
@@ -8,20 +9,42 @@ class PlayerMethods {
     return "${playerName.name}-$index";
   }
 
-  static List<Player> get getPlayers {
+  static List<Player> getPlayers({
+    required List<List<Vector2>> gridCorrList,
+    required double tileSize,
+  }) {
+    List<List<List<int>>> playersBoundary = [
+      [
+        [0, 0],
+        [5, 5]
+      ],
+      [
+        [0, 9],
+        [5, 14]
+      ],
+      [
+        [9, 9],
+        [14, 14]
+      ],
+      [
+        [9, 0],
+        [14, 5],
+      ]
+    ];
+    List<List<Vector2>> playerStaringPositions = getPlayerStartingPoints(
+        gridCorrList: gridCorrList,
+        playersBoundary: playersBoundary,
+        tileSize: tileSize);
     return [
       Player(
           color: BasicPalette.lightRed.paint(),
           player: PlayerName.A,
-          playerBirthPlace: [
-            [0, 0],
-            [5, 5]
-          ],
+          playerBirthPlace: playersBoundary[0],
           playerEndingPlaceIndexes: [0, 3],
           playerPieces: List.generate(
             4,
             (index) => Piece(
-              currentPosition: [],
+              currentPosition: playerStaringPositions[0][index],
               initialStep: [],
               birthPoint: [],
               pieceName: getPieceName(PlayerName.A, index),
@@ -30,19 +53,19 @@ class PlayerMethods {
           playerFirstStep: [6, 1],
           piecesRemained: 4,
           // 8 th row will be player 1 final
-          playerFinalTrack: List.generate(6, (index) => [7, index + 1])),
+          playerFinalTrack: List.generate(
+            6,
+            (index) => [7, index + 1],
+          )),
       Player(
         color: BasicPalette.yellow.paint(),
-        player: PlayerName.B,
-        playerBirthPlace: [
-          [0, 9],
-          [5, 14]
-        ],
+        player: PlayerName.C,
+        playerBirthPlace: playersBoundary[1],
         playerEndingPlaceIndexes: [1, 0],
         playerPieces: List.generate(
           4,
           (index) => Piece(
-            currentPosition: [],
+            currentPosition: playerStaringPositions[1][index],
             initialStep: [],
             birthPoint: [],
             pieceName: getPieceName(PlayerName.B, index),
@@ -58,16 +81,13 @@ class PlayerMethods {
       ),
       Player(
         color: BasicPalette.green.paint(),
-        player: PlayerName.C,
-        playerBirthPlace: [
-          [9, 9],
-          [14, 14]
-        ],
+        player: PlayerName.B,
+        playerBirthPlace: playersBoundary[2],
         playerEndingPlaceIndexes: [1, 2],
         playerPieces: List.generate(
           4,
           (index) => Piece(
-            currentPosition: [],
+            currentPosition: playerStaringPositions[2][index],
             initialStep: [],
             birthPoint: [],
             pieceName: getPieceName(PlayerName.C, index),
@@ -84,15 +104,12 @@ class PlayerMethods {
       Player(
         color: BasicPalette.blue.paint(),
         player: PlayerName.D,
-        playerBirthPlace: [
-          [9, 0],
-          [14, 5],
-        ],
+        playerBirthPlace: playersBoundary[3],
         playerEndingPlaceIndexes: [2, 3],
         playerPieces: List.generate(
           4,
           (index) => Piece(
-            currentPosition: [],
+            currentPosition: playerStaringPositions[3][index],
             initialStep: [],
             birthPoint: [],
             pieceName: getPieceName(PlayerName.D, index),
@@ -107,5 +124,24 @@ class PlayerMethods {
         ),
       ),
     ];
+  }
+
+  static List<List<Vector2>> getPlayerStartingPoints({
+    required List<List<Vector2>> gridCorrList,
+    required List<List<List<int>>> playersBoundary,
+    required double tileSize,
+  }) {
+    return playersBoundary.map((playerBoundary) {
+      Vector2 start =
+          gridCorrList[playerBoundary.first.first][playerBoundary.first.last];
+      Vector2 end =
+          gridCorrList[playerBoundary.last.first][playerBoundary.last.last];
+      List<Vector2> placingRect = Rect.fromCenter(
+        center: ((start + end) / 2).toOffset(),
+        height: tileSize * 2,
+        width: tileSize * 2,
+      ).toVertices();
+      return placingRect;
+    }).toList();
   }
 }
